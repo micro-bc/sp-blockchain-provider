@@ -30,10 +30,13 @@ module.exports = {
 
         user.save(function (err, user) {
             if (err) {
-                return res.status(500).json({
-                    message: 'Error when creating user',
-                    error: err
-                });
+                if (err.name == 'ValidationError') {
+                    return res.status(400).json({
+                        error: err.message
+                    });
+                }
+
+                return next(err);
             }
 
             return res.status(201).json(user);

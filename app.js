@@ -1,13 +1,16 @@
 const express = require('express');
-const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
+
+// CORS setup
+app.use(cors({ optionsSuccessStatus: 200 }));
 
 // Mongoose setup
 let mongoUri = 'mongodb+srv://jakob:NMGBxHCiu4C1BvJa@cluster0-vhs1d.mongodb.net/blockchain?retryWrites=true&w=majority';
