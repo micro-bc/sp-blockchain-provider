@@ -1,4 +1,6 @@
 const userModel = require('../models/userModel.js');
+
+const request = require('request');
 const ec = require('elliptic').ec;
 
 const EC = new ec('secp256k1');
@@ -22,13 +24,15 @@ module.exports = {
     },
 
     register: function (req, res) {
+        const kp = EC.genKeyPair();
+
         const user = new userModel({
-			username : req.body.username,
-			password : req.body.password,
-			privateKey : EC.genKeyPair().getPrivate('hex')
+            username: req.body.username,
+            password: req.body.password,
+            privateKey: kp.getPrivate('hex')
         });
 
-        user.save(function (err, user) {
+        user.save(async (err, user) => {
             if (err) {
                 if (err.name == 'ValidationError') {
                     return res.status(400).json({
@@ -39,8 +43,51 @@ module.exports = {
                 return next(err);
             }
 
-            return res.status(201).json(user);
+            const nodes = await getNodes('localhost:2002').then(res => res, console.error);
+            if (!nodes) {
+                return res.status(500).json({
+                    error: 'Tracker error'
+                });
+            }
+
+            const pub = kp.getPublic('hex');
+            const sig = kp.sign('initWallet', 'utf-8').toDER('hex');
+
+            for (let i = 0; i < nodes.length; ++i) {
+                if (await initWallet(nodes[i], pub, sig).then(_ => true, _ => false)) {
+                    return res.status(201).json(user);
+                }
+                console.error('Node error');
+            }
+
+            return res.status(500).json({
+                error: 'Failed to initWallet'
+            });
         });
     }
 
 };
+
+function getNodes(tracker) {
+    return new Promise((resolve, reject) => {
+        request('http://' + tracker, { timeout: 5 }, (err, res, body) => {
+            if (err || res.statusCode != 200) {
+                reject('Tracker error');
+            }
+
+            resolve(JSON.parse(body));
+        });
+    })
+}
+
+function initWallet(node, publicKey, signature) {
+    return new Promise((resolve, reject) => {
+        request('http://' + node + '/initWallet', { timeout: 5, body: JSON.stringify({ publicKey, signature }) }, (err, res, body) => {
+            if (err || res.statusCode != 201) {
+                reject('Node error');
+            }
+
+            resolve();
+        });
+    });
+}
