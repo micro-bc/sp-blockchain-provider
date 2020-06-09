@@ -80,7 +80,7 @@ module.exports = {
 
 function getNodes(tracker) {
     return new Promise((resolve, reject) => {
-        request('http://' + tracker, { timeout: 5 }, (err, res, body) => {
+        request('http://' + tracker, { timeout: 2000 }, (err, res, body) => {
             if (err || res.statusCode != 200) {
                 reject('Tracker error');
             }
@@ -92,7 +92,7 @@ function getNodes(tracker) {
 
 function initWallet(node, publicKey, signature) {
     return new Promise((resolve, reject) => {
-        request('http://' + node + '/initWallet', { timeout: 5, body: JSON.stringify({ publicKey, signature }) }, (err, res, body) => {
+        request('http://' + node + '/initWallet', { timeout: 2000, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ publicKey, signature }), method: 'POST' }, (err, res, body) => {
             if (err || res.statusCode != 201) {
                 reject('Node error');
             }
