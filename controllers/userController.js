@@ -5,6 +5,16 @@ const ec = require('elliptic').ec;
 
 const EC = new ec('secp256k1');
 
+const INIT_DATA = {
+    clicks: 500,
+    masks: 200,
+    respirators: 100,
+    volunteers: 50,
+    doctors: 20,
+    ventilators: 5,
+    researches: 3
+};
+
 module.exports = {
 
     login: function (req, res, next) {
@@ -51,7 +61,7 @@ module.exports = {
             }
 
             const pub = kp.getPublic('hex');
-            const sig = kp.sign('initWallet', 'utf-8').toDER('hex');
+            const sig = kp.sign(JSON.stringify(INIT_DATA), 'utf-8').toDER('hex');
 
             for (let i = 0; i < nodes.length; ++i) {
                 if (await initWallet(nodes[i], pub, sig).then(_ => true, _ => false)) {
