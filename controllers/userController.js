@@ -61,7 +61,7 @@ module.exports = {
             }
 
             const pub = kp.getPublic('hex');
-            const sig = kp.sign('initWallet', 'utf-8').toDER('hex');
+            const sig = kp.sign('mineBlock', 'utf-8').toDER('hex');
 
             for (let i = 0; i < nodes.length; ++i) {
                 if (await initWallet(nodes[i], pub, sig).then(_ => true, _ => false)) {
